@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from django.core.checks import messages
 
 from alarms.models import Alarm, AlarmHistory
-from datetime import datetime, date
+from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 import re
@@ -70,8 +70,6 @@ class AlarmHistoryAdmin(admin.ModelAdmin):
     def get_renewal_date(self, obj):
         match = re.search(r'\d{4}-\d{2}-\d{2}', obj.content)
         renewal_date = datetime.strptime(match.group(), '%Y-%m-%d').date()
-        print(obj.alarm.subscription.next_billing_at())
-        print(obj.alarm.subscription.started_at)
 
         return renewal_date
 

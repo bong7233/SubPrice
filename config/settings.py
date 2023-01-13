@@ -42,6 +42,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+# Django Debug Toolbar
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
+
 
 # Application definition
 
@@ -58,6 +63,12 @@ INSTALLED_APPS = [
     'subscriptions',
     'alarms',
     'django_extensions',
+    'debug_toolbar',
+    'storages',
+    
+    # Celery
+    'django_celery_results',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -68,6 +79,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -94,12 +106,25 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
+# Local - sqlite3 설정
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# # AWS RDS - postgreSQL 설정
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql_psycopg2",
+#         "HOST": secrets["DATABASES"]["default"]["HOST"],
+#         "NAME": secrets["DATABASES"]["default"]["NAME"],
+#         "PORT": "5432",
+#         "USER": secrets["DATABASES"]["default"]["USER"],
+#         "PASSWORD": secrets["DATABASES"]["default"]["PASSWORD"],
+#     }
+# }
 
 
 # Password validation
@@ -147,3 +172,42 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # 사용자 인증 등을 진행할 때 사용할 모델 선언
 AUTH_USER_MODEL = 'users.User'
+
+# # S3 설정 (주석 처리 시, 프로젝트 폴더에서 static, media 로드)
+# AWS_ACCESS_KEY_ID = secrets["AWS_S3"]["default"]["AWS_ACCESS_KEY_ID"]
+# AWS_SECRET_ACCESS_KEY = secrets["AWS_S3"]["default"]["AWS_SECRET_ACCESS_KEY"]
+# AWS_REGION = secrets["AWS_S3"]["default"]["AWS_REGION"]
+# AWS_STORAGE_BUCKET_NAME = secrets["AWS_S3"]["default"]["AWS_STORAGE_BUCKET_NAME"]
+# AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com"
+# AWS_DEFAULT_ACL = "public-read"
+# DEFAULT_FILE_STORAGE = "config.storages.S3DefaultStorage"
+# STATICFILES_STORAGE = "config.storages.S3StaticStorage"
+
+# # S3 관련 추가 설정 (admin 페이지에서 사용)
+# S3_STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/static/"
+
+# csv 파일을 읽어오는 경로
+CSV_READ_FROM = "here"
+
+# Celery settings
+CELERY_TIMEZONE = "Asia/Seoul"
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_CACHE_BACKEND = 'django-cache'
+CELERY_BROKER_URL = 'redis://redis:6379'
+#CELERY_RESULT_BACKEND = 'redis://redis:6379'
+
+# celery beat settings
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+# email settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = secrets["GMAIL"]["default"]["EMAIL_HOST"]
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = secrets["GMAIL"]["default"]["EMAIL_HOST_USER"]
+EMAIL_HOST_PASSWORD = secrets["GMAIL"]["default"]["EMAIL_HOST_PASSWORD"]
